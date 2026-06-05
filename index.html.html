@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SMCTECH Quotation Tool</title>
+<title>Ishikawa Kikou Quotation Tool</title>
 <style>
 :root{color-scheme:light}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -107,7 +107,7 @@ textarea{resize:vertical;min-height:50px}
     <div class="card-head" onclick="toggleCard(this)"><h2>Quote Information</h2><span class="collapse-arrow">&#9660;</span></div>
     <div class="card-body">
       <div class="form-grid wide">
-        <div><label>Quotation Number</label><input id="quoteNo" type="text" value="SMC-" oninput="updateQuote()"></div>
+        <div><label>Quotation Number</label><input id="quoteNo" type="text" value="IKK-" oninput="updateQuote()"></div>
         <div><label>Date</label><input id="quoteDate" type="date" oninput="updateQuote()"></div>
         <div><label>Customer / Company</label><input id="custName" type="text" oninput="updateQuote()"></div>
         <div><label>Attention (Contact)</label><input id="custContact" type="text" oninput="updateQuote()"></div>
@@ -152,10 +152,10 @@ textarea{resize:vertical;min-height:50px}
   <div class="card">
     <div class="card-head"><h2>AI Drawing Analysis</h2></div>
     <div class="card-body">
-      <div class="info-box">Enter your Anthropic API key to enable AI drawing analysis. Get one at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Your key is stored only in this browser tab.</div>
-      <div style="display:flex;align-items:center;gap:8px;max-width:500px">
-        <label style="min-width:100px;font-weight:600;font-size:11px">API Key</label>
-        <input id="apiKey" type="password" placeholder="sk-ant-..." style="flex:1">
+      <div class="info-box">Enter your Anthropic API key to enable AI drawing analysis. Get one free at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Key is stored only in this browser tab and never sent anywhere except Anthropic.</div>
+      <div style="display:flex;align-items:center;gap:8px;max-width:520px;margin-top:6px">
+        <label style="min-width:80px;font-weight:600;font-size:11px;flex-shrink:0">API Key</label>
+        <input id="apiKey" type="password" placeholder="sk-ant-api03-..." style="flex:1;font-family:monospace">
         <button class="btn btn-o btn-sm" onclick="const f=document.getElementById('apiKey');f.type=f.type==='password'?'text':'password'">Show</button>
       </div>
     </div>
@@ -586,18 +586,21 @@ async function analyzeDrawing(id){
 
   const PROMPT='Act as an expert mechanical engineer and automated blueprint analyzer. Analyze this 2D sheet metal drawing and extract all manufacturing specifications.\n\nCRITICAL: Output ONLY a raw valid JSON object. No markdown, no code fences, no backticks, no explanation.\n\n{"partName":"or null","drawingNumber":"or null","materialType":"steel or stainless or aluminum or copper or null","materialGrade":"e.g. SPCC SS304 AL5052 or null","thicknessMm":number_or_null,"blankLengthMm":number_or_null,"blankWidthMm":number_or_null,"cutPerimeterMm":number_or_null,"holeCount":integer_or_0,"bendCount":integer_or_0,"weldRequired":true_or_false,"surfaceFinish":"none or painting or anodizing or hard_anodizing or zinc or nickel or passivation or ct or sandblasting or silk or null","finishAreaDm2":number_or_null,"quantity":integer_or_null,"notes":"brief summary"}\n\nConvert inches to mm (x25.4). The JSON must parse with JSON.parse() unchanged.';
 
-  // Call Anthropic API directly
   const apiKey=document.getElementById('apiKey')?.value?.trim();
-  if(!apiKey){showModal('API Key Required','Please enter your Anthropic API key in the Settings tab to use AI analysis.');p.aiStatus='';renderParts();return;}
+  if(!apiKey){showModal('API Key Required','Enter your Anthropic API key in the <b>Settings</b> tab to use AI analysis.');p.aiStatus='';renderParts();return;}
   try{
-    const messages=[{role:'user',content:[
+    const msgs=[{role:'user',content:[
       {type:'text',text:PROMPT},
       ...p.images.map(img=>({type:'image',source:{type:'base64',media_type:img.split(';')[0].split(':')[1],data:img.split(',')[1]}}))
     ]}];
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'x-api-key':apiKey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1024,messages})});
-    if(!resp.ok){const err=await resp.json();throw new Error(err.error?.message||resp.statusText);}
-    const data=await resp.json();
-    const result=data.content?.[0]?.text||'';
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':apiKey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1024,messages:msgs})
+    });
+    if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||resp.statusText);}
+    const json=await resp.json();
+    const result=json.content?.[0]?.text||'';
     let parsed=null;
     try{
       let clean=result.trim().replace(/^```[\w]*\s*/,'').replace(/\s*```$/,'').trim();
@@ -650,9 +653,9 @@ function updateQuote(){
       +'<td class="left">'+p.qty+' pcs</td></tr>';
   }).join('');
   const today=G('quoteDate')||new Date().toISOString().split('T')[0];
-  let h='<div class="qh"><div class="qc"><h2>SMCTECH JSC (CONG TY CO PHAN SMCTECH)</h2>'
-    +'<p>Lot 124B, Ba Thien 1 IZ, Thien Ke Town,<br>Binh Xuyen Dist, Vinh Phuc Province, Viet Nam<br>'
-    +'Tel: +84-274-3739-264 | Email: sales@smctech.vn | Website: https://smctech.vn</p></div>'
+  let h='<div class="qh"><div class="qc"><h2>ISHIKAWA KIKOU VN CO.,LTD (CONG TY TNHH ISHIKAWA KIKOU VIET NAM)</h2>'
+    +'<p>Lo B12, Duong so 13, KCN Phuc Long, Xa Long Hiep,<br>Huyen Ben Luc, Tinh Long An, Viet Nam<br>'
+    +'Tel: +84-272-363-8148 | Email: info@ishikawakikou.com | Website: https://ishikawakikou.com/vn/</p></div>'
     +'<div class="qt"><h1>QUOTATION</h1><p style="margin-top:8px">Date: <b>'+today+'</b></p>'
     +'<p>No.: <b>'+esc(G('quoteNo'))+'</b></p><p style="margin-top:4px;color:#888;font-size:10px">By: '+esc(G('prepBy'))+'</p></div></div>';
   h+='<div class="qi">'
@@ -660,7 +663,7 @@ function updateQuote(){
     +'<div class="qir"><span class="qil">Attn:</span><span>'+esc(G('custContact'))+'</span></div>'
     +'<div class="qir"><span class="qil">Tel:</span><span>'+esc(G('custTel'))+'</span></div>'
     +'<div class="qir"><span class="qil">Email:</span><span>'+esc(G('custEmail'))+'</span></div></div>';
-  h+='<p style="font-size:10px;margin-bottom:10px;color:#444">Thanks for your interest in SMCTECH services. We would like to quote your request as follows:</p>';
+  h+='<p style="font-size:10px;margin-bottom:10px;color:#444">Thanks for your interest in Ishikawa Kikou VN services. We would like to quote your request as follows:</p>';
   h+='<table class="q-table"><thead><tr><th>No.</th><th>Part Description</th><th>Drawing No.</th><th>Material</th><th>Unit</th><th>Lot</th><th>Unit Price (USD)</th><th>Total (USD)</th><th>Remarks</th></tr></thead>'
     +'<tbody>'+(rows||'<tr><td colspan="9" style="color:#aaa;text-align:center">No parts added yet</td></tr>')+'</tbody>'
     +'<tfoot><tr class="tr"><td colspan="7" style="text-align:right"><b>TOTAL (USD)</b></td><td style="text-align:right"><b>$ '+grand.toFixed(2)+'</b></td><td></td></tr></tfoot></table>';
@@ -669,14 +672,14 @@ function updateQuote(){
     +'<tr><td>2) Tax</td><td>10% V.A.T. Not included</td></tr>'
     +'<tr><td>3) Validity</td><td>The quotation is valid for '+esc(G('validity'))+'</td></tr>'
     +'<tr><td>4) Payment</td><td>'+esc(G('payTerms'))+'</td></tr>'
-    +'<tr><td>5) Delivery term</td><td>EXW (Ex-Works, SMCTECH Factory)</td></tr>'
-    +'<tr><td>6) Banking Account</td><td>1027472268 &mdash; CONG TY CO PHAN SMCTECH &mdash; VIETCOMBANK VINH PHUC, BINH XUYEN BRANCH</td></tr>'
+    +'<tr><td>5) Delivery term</td><td>EXW (Ex-Works, Ishikawa Kikou VN Factory)</td></tr>'
+    +'<tr><td>6) Banking Account</td><td>[Please update with Ishikawa Kikou VN bank account details]</td></tr>'
     +(G('remarks')?'<tr><td>7) Remarks</td><td>'+esc(G('remarks'))+'</td></tr>':'')
     +'</table></div>';
   h+='<p style="font-size:10px;color:#444;margin-bottom:20px">Thank you for giving us the opportunity to bid for your business.</p>';
   h+='<div class="q-sign">'
     +'<div class="q-sign-box"><p><b>CUSTOMER</b></p><p style="margin-top:46px">'+esc(G('custName'))+'</p></div>'
-    +'<div class="q-sign-box"><p><b>SMCTECH JSC</b></p><p style="margin-top:46px">'+esc(G('prepBy'))+'</p></div>'
+    +'<div class="q-sign-box"><p><b>Ishikawa Kikou VN</b></p><p style="margin-top:46px">'+esc(G('prepBy'))+'</p></div>'
     +'</div>';
   document.getElementById('quoteContent').innerHTML=h;
 }
