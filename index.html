@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ishikawa Kikou Quotation Tool</title>
+<title>Apillis Quotation Tool</title>
 <style>
 :root{color-scheme:light}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -95,7 +95,7 @@ textarea{resize:vertical;min-height:50px}
 </style>
 </head>
 <body>
-<div class="tabs">
+<div class="tabs"><img id="tabLogo" alt="Apillis" style="height:30px;align-self:center;margin:0 14px 0 12px;background:#fff;padding:2px 6px;border-radius:4px">
   <div class="tab active" onclick="switchTab('input')">&#128203; Input &amp; Calculate</div>
   <div class="tab" onclick="switchTab('quote')">&#128196; Quote Preview</div>
   <div class="tab" onclick="switchTab('settings')">&#9881; Rates &amp; Settings</div>
@@ -107,7 +107,7 @@ textarea{resize:vertical;min-height:50px}
     <div class="card-head" onclick="toggleCard(this)"><h2>Quote Information</h2><span class="collapse-arrow">&#9660;</span></div>
     <div class="card-body">
       <div class="form-grid wide">
-        <div><label>Quotation Number</label><input id="quoteNo" type="text" value="IKK-" oninput="updateQuote()"></div>
+        <div><label>Quotation Number</label><input id="quoteNo" type="text" value="" oninput="updateQuote()"></div>
         <div><label>Date</label><input id="quoteDate" type="date" oninput="updateQuote()"></div>
         <div><label>Customer / Company</label><input id="custName" type="text" oninput="updateQuote()"></div>
         <div><label>Attention (Contact)</label><input id="custContact" type="text" oninput="updateQuote()"></div>
@@ -130,7 +130,7 @@ textarea{resize:vertical;min-height:50px}
     <h2>Cost Summary</h2>
     <div style="overflow-x:auto">
       <table class="cost-table">
-        <thead><tr><th>#</th><th>Part / Drawing</th><th>Material</th><th>Qty</th><th>Material (VND)</th><th>Processing (VND)</th><th>Finish (VND)</th><th>Total/pc (VND)</th><th>Unit Price (USD)</th><th>Total (USD)</th></tr></thead>
+        <thead><tr><th>#</th><th>Part / Drawing</th><th>Material</th><th>Qty</th><th>Material (VND)</th><th>Processing (VND)</th><th>Finish (VND)</th><th>Hardware (VND)</th><th>Total/pc (VND)</th><th>Unit Price (USD)</th><th>Total (USD)</th></tr></thead>
         <tbody id="summaryBody"></tbody>
         <tfoot id="summaryFoot"></tfoot>
       </table>
@@ -165,7 +165,7 @@ textarea{resize:vertical;min-height:50px}
     <div class="card-body"><div class="rate-grid">
       <div class="ri"><label>USD Exchange Rate</label><input id="r_usd" type="number" value="26000" oninput="recalcAll()"><span class="ru">VND/USD</span></div>
       <div class="ri"><label>Default Waste %</label><input id="r_waste" type="number" value="20" oninput="recalcAll()"><span class="ru">%</span></div>
-      <div class="ri"><label>Profit Margin</label><input id="r_margin" type="number" value="0" oninput="recalcAll()"><span class="ru">%</span></div>
+      <div class="ri"><label>Profit Margin</label><input id="r_margin" type="number" value="25" oninput="recalcAll()"><span class="ru">%</span></div>
     </div></div>
   </div>
   <div class="card">
@@ -215,6 +215,22 @@ textarea{resize:vertical;min-height:50px}
 </div>
 
 <script>
+// ── Company information (edit here) ──
+const COMPANY={
+  name:'Apillis',
+  nameVN:'',
+  shortName:'Apillis',
+  logo:'data:image/png;base64,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', // embedded Apillis logo
+  logoFallback:'',
+  address:'72 Le Thanh Ton, Ben Nghe Ward, District 1, HCMC, Vietnam',
+  tel:'',
+  email:'sales@apillis.com',
+  website:'https://apillis.com/',
+  quotePrefix:'API-',
+  deliveryTerm:'EXW (Ex-Works, [Apillis factory / location])', // TODO
+  bank:'[Please update with Apillis bank account details]'     // TODO
+};
+
 // ── Lookup tables ──
 const LD={t:[0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,6,8,10,14,16],line:{steel:[11000,11000,9000,8500,6500,5000,2800,2100,2000,1800,1700,1600,1200,600,500],stainless:[11000,11000,9000,8000,6000,5000,4500,3500,3000,2400,1400,700,600,null,null],aluminum:[10000,10000,8000,6000,5000,3500,2500,1500,1000,700,500,450,null,null,null],copper:[8000,8000,6000,5000,4000,3000,null,null,null,null,null,null,null,null,null]},pierce:[0.0133,0.0167,0.025,0.0333,0.0417,0.05,0.0583,0.0667,0.075,0.0833,0.1,0.1333,0.1667,0.2333,0.2667]};
 const BD={steps:[1,2,3,4,5,6,7,8,9,10,11,12],setup:[2,2,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5],time:[0.5,0.75,1.25,2,2.5,3,3.5,4,4.5,5,5.5,6]};
@@ -265,9 +281,11 @@ function calc(p){
     fC+=cost; finishLines.push({label:FLABEL[f.type]||f.type,basis,cost});
   });
   const outC=p.outsourceCost||0;
+  let hwC=0;const hwLines=[];
+  (p.hw||[]).forEach(h=>{const c=(h.qty||0)*(h.price||0);if(c>0){hwC+=c;hwLines.push({label:h.desc||'Hardware',basis:(h.qty||0)+' × '+Math.round(h.price||0).toLocaleString('en')+' VND',cost:c});}});
   const fCTotal=fC+outC;
-  const proc=lC+bC+wC+pC+tC+gC+aC, sub=matC+proc+fCTotal, tot=sub*(1+marg), uP=tot/usd, totUsd=uP*(p.qty||1);
-  return{wt,matC,lC,lMin,bC,bMin,wC,wMin,pC,tC,gC,aC,proc,fC:fCTotal,outC,finishLines,sub,tot,uP,totUsd};
+  const proc=lC+bC+wC+pC+tC+gC+aC, sub=matC+proc+fCTotal+hwC, tot=sub*(1+marg), uP=tot/usd, totUsd=uP*(p.qty||1);
+  return{wt,matC,lC,lMin,bC,bMin,wC,wMin,pC,tC,gC,aC,proc,fC:fCTotal,outC,finishLines,hwC,hwLines,sub,tot,uP,totUsd};
 }
 
 function mkPart(){
@@ -277,7 +295,7 @@ function mkPart(){
     la:true,lp:0,nh:0,lsu:3,lso:0,
     nb:0,bc:'easy',bse:0,
     wt:'tig',wl:0,wsu:5,np:0,nt:0,gm:0,am:0,
-    finishes:[],outsourceCost:0,open:true,images:[],aiStatus:''};
+    finishes:[],hw:[],outsourceCost:0,open:true,images:[],aiStatus:''};
 }
 
 function addPart(){parts.push(mkPart());renderParts();updateSummary();}
@@ -290,6 +308,9 @@ function sp(id,k,v){
   else{rpc(id);}updateSummary();
 }
 
+function addHw(id){const p=parts.find(p=>p.id===id);if(!p)return;(p.hw=p.hw||[]).push({desc:'',qty:1,price:0});renderParts();updateSummary();}
+function removeHw(id,i){const p=parts.find(p=>p.id===id);if(!p)return;p.hw.splice(i,1);renderParts();updateSummary();}
+function setHw(id,i,k,v){const p=parts.find(p=>p.id===id);if(!p||!p.hw[i])return;p.hw[i][k]=v;rpc(id);updateSummary();}
 function addFinish(id){const p=parts.find(p=>p.id===id);if(!p)return;p.finishes.push({type:'none',area:0});renderParts();updateSummary();}
 function removeFinish(id,fi){const p=parts.find(p=>p.id===id);if(!p)return;p.finishes.splice(fi,1);renderParts();updateSummary();}
 function setFinish(id,fi,key,val){const p=parts.find(p=>p.id===id);if(!p||!p.finishes[fi])return;p.finishes[fi][key]=val;if(key==='type')renderParts();else{rpc(id);updateSummary();}}
@@ -314,6 +335,7 @@ function bkHTML(c,p){
   ];
   rows.filter(r=>r[2]>0).forEach(r=>{h+='<tr><td>'+r[0]+'</td><td style="color:#777;font-size:10px">'+r[1]+'</td><td style="text-align:right">'+f(r[2])+'</td></tr>';});
   c.finishLines.filter(fl=>fl.cost>0).forEach(fl=>{h+='<tr><td>'+fl.label+'</td><td style="color:#777;font-size:10px">'+fl.basis+'</td><td style="text-align:right">'+f(fl.cost)+'</td></tr>';});
+  c.hwLines.forEach(hl=>{h+='<tr><td>'+esc(hl.label)+'</td><td style="color:#777;font-size:10px">'+hl.basis+'</td><td style="text-align:right">'+f(hl.cost)+'</td></tr>';});
   const outRow=p.outsourceCost>0?[['Outsource','Direct outsource cost per piece',p.outsourceCost>0?p.outsourceCost:0]]:[];
   outRow.forEach(r=>{h+='<tr><td>'+r[0]+'</td><td style="color:#777;font-size:10px">'+r[1]+'</td><td style="text-align:right">'+f(r[2])+'</td></tr>';});
   h+='</tbody><tfoot>';
@@ -355,32 +377,43 @@ function pHTML(p,idx){
     // Thumbnail strip
     let thumbs='';
     p.images.forEach(function(src,pi){
-      thumbs+='<div style="position:relative;flex-shrink:0">'
-        +'<img src="'+src+'" style="height:120px;width:auto;max-width:200px;border-radius:4px;border:1px solid #ccd;cursor:pointer;object-fit:contain;background:#fff" onclick="showFullImg(this.src)" title="Click to enlarge">'
-        +'<div style="position:absolute;top:2px;left:2px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:1px 5px;border-radius:3px">Pg '+(pi+1)+'</div>'
-        +'</div>';
+      const fname=(p.fileNames&&p.fileNames[pi])||('File '+(pi+1));
+      if(isPdf(src)){
+        thumbs+='<div style="flex-shrink:0;width:130px;height:120px;border:1px solid #ccd;border-radius:4px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:6px;text-align:center" onclick="openPdf('+p.id+','+pi+')" title="Click to open PDF">'
+          +'<div style="font-size:30px;color:#c0392b">&#128462;</div>'
+          +'<div style="font-size:10px;font-weight:700;color:#c0392b">PDF</div>'
+          +'<div style="font-size:9px;color:#555;word-break:break-all;margin-top:3px;max-height:34px;overflow:hidden">'+esc(fname)+'</div>'
+          +'</div>';
+      }else{
+        thumbs+='<div style="position:relative;flex-shrink:0">'
+          +'<img src="'+src+'" style="height:120px;width:auto;max-width:200px;border-radius:4px;border:1px solid #ccd;cursor:pointer;object-fit:contain;background:#fff" onclick="showFullImg(this.src)" title="Click to enlarge">'
+          +'<div style="position:absolute;top:2px;left:2px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:1px 5px;border-radius:3px">'+(pi+1)+'</div>'
+          +'</div>';
+      }
     });
     const analyzeBtn=p.aiStatus==='analyzing'
       ?'<button class="btn btn-analyzing btn-sm" disabled>&#9203; Analyzing&#8230;</button>'
-      :'<button class="btn btn-ai btn-sm" onclick="analyzeDrawing('+p.id+')">'+(p.aiStatus==='success'?'&#9989; Re-analyze':'&#129302; Analyze Drawing ('+p.images.length+' page'+(p.images.length>1?'s':'')+')')+'</button>';
+      :'<button class="btn btn-ai btn-sm" onclick="analyzeDrawing('+p.id+')">'+(p.aiStatus==='success'?'&#9989; Re-analyze':'&#129302; Analyze Drawing ('+p.images.length+' file'+(p.images.length>1?'s':'')+')')+'</button>';
     const statusMsg=p.aiStatus==='success'
-      ?'<div class="done-box" style="margin-top:6px"><b>&#9989; Done</b> &#8212; fields auto-filled from '+p.images.length+' page'+(p.images.length>1?'s':'')+'. Review and adjust as needed.'+(p.aiNotes?'<br><span style="color:#555">Notes: '+esc(p.aiNotes)+'</span>':'')+'</div>'
+      ?'<div class="done-box" style="margin-top:6px"><b>&#9989; Done</b> &#8212; fields auto-filled from '+p.images.length+' file'+(p.images.length>1?'s':'')+'. Review and adjust as needed.'+(p.aiNotes?'<br><span style="color:#555">Notes: '+esc(p.aiNotes)+'</span>':'')+'</div>'
       :'';
     drawZone='<div style="border:1.5px solid #4da3ff;border-radius:6px;overflow:hidden;margin-bottom:8px">'
       +'<div style="display:flex;gap:6px;padding:8px;overflow-x:auto;background:#f8faff">'+thumbs+'</div>'
       +'<div style="padding:6px 10px;background:#f0f4ff;display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
       +analyzeBtn
-      +'<label class="btn btn-o btn-sm" style="cursor:pointer">&#128247; Add / Replace<input type="file" accept="image/png,image/jpeg,image/jpg,.png,.jpg,.jpeg" multiple style="display:none" onchange="handleImageUpload('+p.id+',this)"></label>'
+      +'<label class="btn btn-o btn-sm" style="cursor:pointer">&#128247; Add / Replace<input type="file" accept="application/pdf,.pdf,image/png,image/jpeg,image/jpg,.png,.jpg,.jpeg" multiple style="display:none" onchange="handleImageUpload('+p.id+',this)"></label>'
       +'<button class="btn btn-sm" style="background:#fff;border:1px solid #ccc;color:#666" onclick="clearImages('+p.id+')">&#x2715; Clear</button>'
+      +'<button class="btn btn-o btn-sm" onclick="pasteAI('+p.id+')">&#128203; Paste AI Result</button>'
       +'</div>'
       +statusMsg
       +'</div>';
   } else {
     drawZone='<label class="drawing-zone">'
       +'<div style="font-size:28px;color:#b0c0d8">&#128196;</div>'
-      +'<div style="font-size:11px;color:#888;margin-top:6px"><b>Click to upload drawing pages</b><br>PNG or JPG &mdash; select multiple files for multi-page drawings<br><span style="color:#aaa;font-size:10px">PDF not supported &mdash; export each page as PNG/JPG first</span></div>'
-      +'<input type="file" accept="image/png,image/jpeg,image/jpg,.png,.jpg,.jpeg" multiple style="display:none" onchange="handleImageUpload('+p.id+',this)">'
-      +'</label>';
+      +'<div style="font-size:11px;color:#888;margin-top:6px"><b>Click to upload 2D drawing</b><br>PDF, PNG or JPG &mdash; multiple files allowed<br><span style="color:#aaa;font-size:10px">Max 20 MB per file</span></div>'
+      +'<input type="file" accept="application/pdf,.pdf,image/png,image/jpeg,image/jpg,.png,.jpg,.jpeg" multiple style="display:none" onchange="handleImageUpload('+p.id+',this)">'
+      +'</label>'
+      +'<div style="margin-top:6px"><button class="btn btn-o btn-sm" onclick="pasteAI('+p.id+')">&#128203; Paste AI Result (JSON)</button></div>';
   }
 
   // Finish rows
@@ -501,6 +534,19 @@ function pHTML(p,idx){
   h+=finRows;
   h+='<button onclick="addFinish('+p.id+')" class="btn btn-o btn-sm" style="margin-top:4px">&#43; Add Finish Layer</button>';
 
+  // Hardware
+  h+='<div class="sec">Hardware / Purchased Parts (PEM, rivets...)</div>';
+  (p.hw||[]).forEach(function(x,hi){
+    h+='<div style="display:grid;grid-template-columns:1fr 90px 140px 26px;gap:6px;align-items:end;margin-bottom:6px">'
+      +'<div>'+(hi===0?'<label>Description / PN</label>':'')+'<input type="text" value="'+esc(x.desc)+'" oninput="setHw('+p.id+','+hi+',\'desc\',this.value)"></div>'
+      +'<div>'+(hi===0?'<label>Qty / pc</label>':'')+'<input type="number" min="0" value="'+(x.qty||0)+'" oninput="setHw('+p.id+','+hi+',\'qty\',+this.value)"></div>'
+      +'<div>'+(hi===0?'<label>Unit price (VND)</label>':'')+'<input type="number" min="0" step="100" value="'+(x.price||0)+'" oninput="setHw('+p.id+','+hi+',\'price\',+this.value)"></div>'
+      +'<div><button onclick="removeHw('+p.id+','+hi+')" style="width:26px;height:26px;border:1px solid #c0392b;background:#fff;color:#c0392b;border-radius:4px;cursor:pointer">&#x2715;</button></div>'
+      +'</div>';
+  });
+  h+='<button onclick="addHw('+p.id+')" class="btn btn-o btn-sm" style="margin-top:2px">&#43; Add Hardware</button>';
+  if((p.hw||[]).some(x=>!x.price))h+='<div class="fn" style="color:#c0392b">Some hardware items have no unit price.</div>';
+
   // Outsource
   h+='<div class="sec">Outsource (Surface Treatment)</div>';
   h+='<div class="form-grid">';
@@ -533,15 +579,22 @@ function updateSummary(){
     const f=n=>Math.round(n).toLocaleString('en');
     return '<tr><td>'+( i+1)+'</td><td class="left">'+esc(p.name)+(p.drw?'<br><small style="color:#999">'+esc(p.drw)+'</small>':'')+'</td>'
       +'<td>'+esc(p.gr)+' '+p.th+'mm</td><td>'+p.qty+'</td>'
-      +'<td>'+f(c.matC)+'</td><td>'+f(c.proc)+'</td><td>'+f(c.fC)+'</td><td>'+f(c.tot)+'</td>'
+      +'<td>'+f(c.matC)+'</td><td>'+f(c.proc)+'</td><td>'+f(c.fC)+'</td><td>'+f(c.hwC)+'</td><td>'+f(c.tot)+'</td>'
       +'<td>$ '+c.uP.toFixed(4)+'</td><td>$ '+c.totUsd.toFixed(2)+'</td></tr>';
   }).join('');
-  tf.innerHTML='<tr class="tot"><td colspan="9" style="text-align:right"><b>Grand Total (USD)</b></td><td><b>$ '+grand.toFixed(2)+'</b></td></tr>';
+  tf.innerHTML='<tr class="tot"><td colspan="10" style="text-align:right"><b>Grand Total (USD)</b></td><td><b>$ '+grand.toFixed(2)+'</b></td></tr>';
   updateQuote();
 }
 
 function recalcAll(){parts.forEach(p=>rpc(p.id));updateSummary();}
-function clearImages(id){const p=parts.find(p=>p.id===id);if(!p)return;p.images=[];p.aiStatus='';renderParts();}
+function clearImages(id){const p=parts.find(p=>p.id===id);if(!p)return;p.images=[];p.fileNames=[];p.aiStatus='';renderParts();}
+function isPdf(src){return typeof src==='string'&&src.indexOf('data:application/pdf')===0;}
+function openPdf(id,i){
+  const p=parts.find(p=>p.id===id);if(!p||!p.images[i])return;
+  const bin=atob(p.images[i].split(',')[1]),arr=new Uint8Array(bin.length);
+  for(let k=0;k<bin.length;k++)arr[k]=bin.charCodeAt(k);
+  window.open(URL.createObjectURL(new Blob([arr],{type:'application/pdf'})),'_blank');
+}
 function showFullImg(src){
   const mid=document.getElementById('imgModal');if(mid)mid.remove();
   const el=document.createElement('div');el.id='imgModal';el.className='modal-overlay';el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center';
@@ -558,8 +611,11 @@ function showFullImg(src){
 function handleImageUpload(id,input){
   const files=Array.from(input.files);if(!files.length)return;
   const p=parts.find(p=>p.id===id);if(!p)return;
-  const imgFiles=files.filter(f=>f.type.startsWith('image/')||/\.(png|jpg|jpeg|gif|webp|bmp)$/i.test(f.name));
-  if(!imgFiles.length){showModal('Image files only','PDF upload is not supported. Please export your drawing as PNG or JPG (one file per page) and upload all pages together.');return;}
+  let imgFiles=files.filter(f=>f.type==='application/pdf'||/\.pdf$/i.test(f.name)||/^image\/(png|jpe?g)$/.test(f.type)||/\.(png|jpg|jpeg)$/i.test(f.name));
+  if(!imgFiles.length){showModal('Unsupported file','Please upload PDF, PNG or JPG drawings.');return;}
+  const big=imgFiles.filter(f=>f.size>20*1024*1024);
+  if(big.length){showModal('File too large','These files exceed 20 MB: '+big.map(f=>esc(f.name)).join(', '));return;}
+  p.fileNames=imgFiles.map(f=>f.name);
   p.aiStatus='loading';p.images=[];renderParts();
   let loaded=0;
   const results=new Array(imgFiles.length);
@@ -584,14 +640,16 @@ async function analyzeDrawing(id){
   if(!p||!p.images||!p.images.length)return;
   p.aiStatus='analyzing';renderParts();
 
-  const PROMPT='Act as an expert mechanical engineer and automated blueprint analyzer. Analyze this 2D sheet metal drawing and extract all manufacturing specifications.\n\nCRITICAL: Output ONLY a raw valid JSON object. No markdown, no code fences, no backticks, no explanation.\n\n{"partName":"or null","drawingNumber":"or null","materialType":"steel or stainless or aluminum or copper or null","materialGrade":"e.g. SPCC SS304 AL5052 or null","thicknessMm":number_or_null,"blankLengthMm":number_or_null,"blankWidthMm":number_or_null,"cutPerimeterMm":number_or_null,"holeCount":integer_or_0,"bendCount":integer_or_0,"weldRequired":true_or_false,"surfaceFinish":"none or painting or anodizing or hard_anodizing or zinc or nickel or passivation or ct or sandblasting or silk or null","finishAreaDm2":number_or_null,"quantity":integer_or_null,"notes":"brief summary"}\n\nConvert inches to mm (x25.4). The JSON must parse with JSON.parse() unchanged.';
+  const PROMPT='Act as an expert sheet-metal manufacturing engineer. The attached file(s) are 2D engineering drawings (PDF and/or images) of ONE part; multiple pages/files belong to the same part. Extract the manufacturing specifications.\n\nRULES:\n- Part identity comes from the TITLE BLOCK: partName = TITLE/NAME/DESCRIPTION field; drawingNumber = DWG NO./PART NO./P/N field (include revision as \"-RevX\" only if a REV field exists); quantity = QTY field in title block or BOM. Use null if not shown. Never invent values.\n- materialType: map SPCC/SPHC/SECC/SGCC/SS400/carbon steel to steel; SUS/SS304/SS201/stainless to stainless; AL/A5052/6061 to aluminum; C1100/copper to copper.\n- blankLengthMm/blankWidthMm: flat-pattern (unfolded) size if given, otherwise estimate from overall dimensions plus flanges.\n- cutPerimeterMm: total outer + inner cut contour length of the flat pattern.\n- holeCount: number of separate inner cut-outs/holes (each needs a pierce).\n- bendCount: number of bend lines.\n- Convert inches to mm (x25.4).\n\nCRITICAL: Output ONLY a raw valid JSON object. No markdown, no code fences, no explanation.\n\n{\"partName\":\"string or null\",\"drawingNumber\":\"string or null\",\"materialType\":\"steel or stainless or aluminum or copper or null\",\"materialGrade\":\"e.g. SPCC SS304 AL5052 or null\",\"thicknessMm\":number_or_null,\"blankLengthMm\":number_or_null,\"blankWidthMm\":number_or_null,\"cutPerimeterMm\":number_or_null,\"holeCount\":integer_or_0,\"bendCount\":integer_or_0,\"pemCount\":integer_or_0 (total self-clinching PEM nuts/studs/pins per piece, use BOM qty if present),\"tapCount\":integer_or_0 (tapped holes),\"hardware\":[{\"desc\":\"MFG PN + short description\",\"qty\":integer_per_piece}] (from BOM, purchased parts only, [] if none),\"weldRequired\":true_or_false,\"surfaceFinish\":\"none or painting or anodizing or hard_anodizing or zinc or nickel or passivation or ct or sandblasting or silk or null\",\"finishAreaDm2\":number_or_null,\"quantity\":integer_or_null,\"notes\":\"brief summary incl. any uncertain values and welding/PEM/tapping notes\"}\n\nThe JSON must parse with JSON.parse() unchanged.';
 
   const apiKey=document.getElementById('apiKey')?.value?.trim();
   if(!apiKey){showModal('API Key Required','Enter your Anthropic API key in the <b>Settings</b> tab to use AI analysis.');p.aiStatus='';renderParts();return;}
   try{
     const msgs=[{role:'user',content:[
       {type:'text',text:PROMPT},
-      ...p.images.map(img=>({type:'image',source:{type:'base64',media_type:img.split(';')[0].split(':')[1],data:img.split(',')[1]}}))
+      ...p.images.map(img=>isPdf(img)
+        ?({type:'document',source:{type:'base64',media_type:'application/pdf',data:img.split(',')[1]}})
+        :({type:'image',source:{type:'base64',media_type:img.split(';')[0].split(':')[1],data:img.split(',')[1]}}))
     ]}];
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
@@ -634,10 +692,35 @@ function applyAIResults(id,d){
   if(d.holeCount)p.nh=parseInt(d.holeCount);
   if(d.bendCount&&d.bendCount>0)p.nb=parseInt(d.bendCount);
   if(d.quantity)p.qty=parseInt(d.quantity);
+  if(d.pemCount&&d.pemCount>0)p.np=parseInt(d.pemCount);
+  if(d.tapCount&&d.tapCount>0)p.nt=parseInt(d.tapCount);
   const dm={steel:'mp_steel',stainless:'mp_ss304',aluminum:'mp_al5052',copper:'mp_copper'};
   if(d.materialType&&dm[d.materialType])p.mp=R(dm[d.materialType])||p.mp;
-  if(d.surfaceFinish&&d.surfaceFinish!=='none'&&!p.finishes.length)p.finishes=[{type:d.surfaceFinish,area:d.finishAreaDm2?parseFloat(d.finishAreaDm2):0}];
+  if(d.surfaceFinish&&d.surfaceFinish!=='none'&&FLABEL[d.surfaceFinish]&&!p.finishes.length)p.finishes=[{type:d.surfaceFinish,area:d.finishAreaDm2?parseFloat(d.finishAreaDm2):0}];
+  if(Array.isArray(d.hardware)&&d.hardware.length&&!(p.hw&&p.hw.length))p.hw=d.hardware.map(x=>({desc:String(x.desc||x.pn||''),qty:parseInt(x.qty)||0,price:parseFloat(x.priceVnd)||0}));
   p.aiNotes=d.notes||'';
+}
+
+function pasteAI(id){
+  document.getElementById('pasteModal')?.remove();
+  const el=document.createElement('div');el.id='pasteModal';el.className='modal-overlay';
+  el.innerHTML='<div class="modal-box" style="max-width:560px"><h3 style="color:#1a3a5c">&#128203; Paste AI Result</h3>'
+    +'<p>Paste the JSON from Claude chat analysis. Fields will be auto-filled.</p>'
+    +'<textarea id="pasteJson" rows="10" style="font-family:monospace;font-size:11px;margin-bottom:10px"></textarea>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-o btn-sm" id="pasteCancel">Cancel</button><button class="btn btn-p btn-sm" id="pasteOk">Apply</button></div></div>';
+  document.body.appendChild(el);
+  document.getElementById('pasteCancel').onclick=()=>el.remove();
+  document.getElementById('pasteOk').onclick=()=>{
+    const txt=document.getElementById('pasteJson').value.trim().replace(/^```[\w]*\s*/,'').replace(/\s*```$/,'');
+    let d=null;try{const m=txt.match(/\{[\s\S]*\}/);d=m?JSON.parse(m[0]):null;}catch(e){d=null;}
+    if(!d){alert('Invalid JSON. Please paste the full JSON object.');return;}
+    el.remove();
+    const p=parts.find(p=>p.id===id);if(!p)return;
+    applyAIResults(id,d);p.aiStatus=p.images&&p.images.length?'success':'';
+    renderParts();updateSummary();
+    showToast('\u2705 Fields filled from pasted result. Please review.');
+  };
+  document.getElementById('pasteJson').focus();
 }
 
 // ── Quote preview ──
@@ -653,9 +736,11 @@ function updateQuote(){
       +'<td class="left">'+p.qty+' pcs</td></tr>';
   }).join('');
   const today=G('quoteDate')||new Date().toISOString().split('T')[0];
-  let h='<div class="qh"><div class="qc"><h2>ISHIKAWA KIKOU VN CO.,LTD (CONG TY TNHH ISHIKAWA KIKOU VIET NAM)</h2>'
-    +'<p>Lo B12, Duong so 13, KCN Phuc Long, Xa Long Hiep,<br>Huyen Ben Luc, Tinh Long An, Viet Nam<br>'
-    +'Tel: +84-272-363-8148 | Email: info@ishikawakikou.com | Website: https://ishikawakikou.com/vn/</p></div>'
+  let h='<div class="qh"><div class="qc">'
+    +logoTag('height:48px;margin-bottom:6px;display:block')
+    +'<h2>'+COMPANY.name+(COMPANY.nameVN?' ('+COMPANY.nameVN+')':'')+'</h2>'
+    +'<p>'+COMPANY.address+'<br>'
+    +[COMPANY.tel?'Tel: '+COMPANY.tel:'',COMPANY.email?'Email: '+COMPANY.email:'',COMPANY.website?'Website: '+COMPANY.website:''].filter(Boolean).join(' | ')+'</p></div>'
     +'<div class="qt"><h1>QUOTATION</h1><p style="margin-top:8px">Date: <b>'+today+'</b></p>'
     +'<p>No.: <b>'+esc(G('quoteNo'))+'</b></p><p style="margin-top:4px;color:#888;font-size:10px">By: '+esc(G('prepBy'))+'</p></div></div>';
   h+='<div class="qi">'
@@ -663,7 +748,7 @@ function updateQuote(){
     +'<div class="qir"><span class="qil">Attn:</span><span>'+esc(G('custContact'))+'</span></div>'
     +'<div class="qir"><span class="qil">Tel:</span><span>'+esc(G('custTel'))+'</span></div>'
     +'<div class="qir"><span class="qil">Email:</span><span>'+esc(G('custEmail'))+'</span></div></div>';
-  h+='<p style="font-size:10px;margin-bottom:10px;color:#444">Thanks for your interest in Ishikawa Kikou VN services. We would like to quote your request as follows:</p>';
+  h+='<p style="font-size:10px;margin-bottom:10px;color:#444">Thanks for your interest in '+COMPANY.shortName+' services. We would like to quote your request as follows:</p>';
   h+='<table class="q-table"><thead><tr><th>No.</th><th>Part Description</th><th>Drawing No.</th><th>Material</th><th>Unit</th><th>Lot</th><th>Unit Price (USD)</th><th>Total (USD)</th><th>Remarks</th></tr></thead>'
     +'<tbody>'+(rows||'<tr><td colspan="9" style="color:#aaa;text-align:center">No parts added yet</td></tr>')+'</tbody>'
     +'<tfoot><tr class="tr"><td colspan="7" style="text-align:right"><b>TOTAL (USD)</b></td><td style="text-align:right"><b>$ '+grand.toFixed(2)+'</b></td><td></td></tr></tfoot></table>';
@@ -672,14 +757,14 @@ function updateQuote(){
     +'<tr><td>2) Tax</td><td>10% V.A.T. Not included</td></tr>'
     +'<tr><td>3) Validity</td><td>The quotation is valid for '+esc(G('validity'))+'</td></tr>'
     +'<tr><td>4) Payment</td><td>'+esc(G('payTerms'))+'</td></tr>'
-    +'<tr><td>5) Delivery term</td><td>EXW (Ex-Works, Ishikawa Kikou VN Factory)</td></tr>'
-    +'<tr><td>6) Banking Account</td><td>[Please update with Ishikawa Kikou VN bank account details]</td></tr>'
+    +'<tr><td>5) Delivery term</td><td>'+COMPANY.deliveryTerm+'</td></tr>'
+    +'<tr><td>6) Banking Account</td><td>'+COMPANY.bank+'</td></tr>'
     +(G('remarks')?'<tr><td>7) Remarks</td><td>'+esc(G('remarks'))+'</td></tr>':'')
     +'</table></div>';
   h+='<p style="font-size:10px;color:#444;margin-bottom:20px">Thank you for giving us the opportunity to bid for your business.</p>';
   h+='<div class="q-sign">'
     +'<div class="q-sign-box"><p><b>CUSTOMER</b></p><p style="margin-top:46px">'+esc(G('custName'))+'</p></div>'
-    +'<div class="q-sign-box"><p><b>Ishikawa Kikou VN</b></p><p style="margin-top:46px">'+esc(G('prepBy'))+'</p></div>'
+    +'<div class="q-sign-box"><p><b>'+COMPANY.shortName+'</b></p><p style="margin-top:46px">'+esc(G('prepBy'))+'</p></div>'
     +'</div>';
   document.getElementById('quoteContent').innerHTML=h;
 }
@@ -709,8 +794,15 @@ function switchTab(tab){
 function toggleCard(h){h.parentElement.classList.toggle('collapsed');}
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+function logoTag(style){
+  if(!COMPANY.logo)return'';
+  return '<img src="'+COMPANY.logo+'" alt="'+COMPANY.shortName+'" style="'+style+'" onerror="if(this.dataset.fb||!COMPANY.logoFallback){this.style.display=\'none\'}else{this.dataset.fb=1;this.src=COMPANY.logoFallback}">';
+}
+
 // ── Init ──
+(function(){const t=document.getElementById('tabLogo');if(!COMPANY.logo){t.remove();return;}t.src=COMPANY.logo;t.onerror=function(){if(t.dataset.fb||!COMPANY.logoFallback){t.remove();}else{t.dataset.fb=1;t.src=COMPANY.logoFallback;}};})();
 document.getElementById('quoteDate').value=new Date().toISOString().split('T')[0];
+document.getElementById('quoteNo').value=COMPANY.quotePrefix;
 updateQuote();
 </script>
 </body>
